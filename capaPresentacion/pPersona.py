@@ -1,57 +1,85 @@
 import streamlit as st
-from capaLogica.dPersona import LPersona
+from supabase import create_client, Client
+from datetime import date
 
 class PPersonas:
 
     def __init__(self):
-        self.__lPersona = LPersona()
-        self.construirInterfaz()
+        self.SUPABASE_URL = "https://nxambvgqormhaykxtvim.supabase.co"
+        self.SUPABASE_KEY = "sb_secret_X-fnD5aPgSVbnAYnkHpWoA_dkOC5d5M"
+        self.supabase: Client = create_client(
+            self.SUPABASE_URL,
+            self.SUPABASE_KEY
+        )
 
-    def construirInterfaz(self):
+    # ===============================
+    # FUNCIONES
+    # ===============================
+    def obtener_pacientes(self):
+        return self.supabase.table("pacientes").select("*").execute().data
 
-        st.title("Registro de Pacientes - Clínica Sele Dent")
+    def obtener_historial(self):
+        return self.supabase.table("historialclinico").select("*").execute().data
 
-        with st.form("formPaciente"):
-            dni = st.text_input("DNI")
-            nombres = st.text_input("Nombres")
-            apePaterno = st.text_input("Apellido Paterno")
-            apeMaterno = st.text_input("Apellido Materno")
-            fecha_nacimiento = st.date_input("Fecha de nacimiento")
-            telefono = st.text_input("Teléfono")
-            correo = st.text_input("Correo")
-            contrasenia = st.text_input("Contraseña", type="password")
-            genero = st.selectbox("Género", ["M", "F"])
+    def obtener_tratamientos(self):
+        return self.supabase.table("tratamientos").select("*").execute().data
 
-            btnGuardar = st.form_submit_button("Guardar Paciente", type='primary')
+    def insertar_paciente(self, paciente):
+        self.supabase.table("pacientes").insert(paciente).execute()
 
-        if btnGuardar:
-            paciente = {
-                "dni": dni,
-                "nombres": nombres,
-                "apePaterno": apePaterno,
-                "apeMaterno": apeMaterno,
-                "fecha_nacimiento": str(fecha_nacimiento),
-                "telefono": telefono,
-                "correo": correo,
-                "contrasenia": contrasenia,
-                "genero": genero
-            }
-            self.insertarPaciente(paciente)
+    # ===============================
+    # INTERFAZ PRINCIPAL
+    # ===============================
+    def run(self):
 
-        self.mostrarPacientes()
+        st.set_page_config(page_title="Sele Dent", layout="wide")
+        st.title("🦷 Sistema Clínico - Sele Dent")
 
-    def insertarPaciente(self, paciente):
-        resultado = self.__lPersona.insertarPersona(paciente)
-        if resultado:
-            st.success("Paciente registrado correctamente")
-        else:
-            st.error("No se pudo registrar al paciente")
+        menu = st.sidebar.selectbox(
+            "Menú",
+            ["Registrar Paciente", "Ver Pacientes", "Historial Clínico", "Tratamientos"]
+        )
 
-    def mostrarPacientes(self):
-        st.subheader("Lista de pacientes")
-        lista = self.__lPersona.mostrarPersona()
+        # ----------------------------------
+        if menu == "Registrar Paciente":
+            st.subheader("➕ Nuevo Paciente")
 
-        if lista:
-            st.dataframe(lista)
-        else:
-            st.info("No hay pacientes registrados")
+            with st.form("form_paciente"):
+                dni = st.text_input("DNI")
+                nombres = st.text_input("Nombres")
+                apepaterno = st.text_input("Apellido Paterno")
+                apematerno = st.text_input("Apellido Materno")
+                fecha_nacimiento = st.date_input("Fecha de nacimiento", value=date(2000,1,1))
+                telefono = st.text_input("Teléfono")
+                correo = st.text_input("Correo")
+                contrasenia = st.text_input("Contraseña", type="password")
+                genero = st.selectbox("Género", ["M", "F"])
+                guardar = st.form_submit_button("Guardar")
+
+            if guardar:
+                paciente = {
+                    "dni": dni,
+                    "nombres": nombres,
+                    "apepaterno": apepaterno,
+                    "apematerno": apematerno,
+                    "fecha_nacimiento": str(fecha_nacimiento),
+                    "telefono": telefono,
+                    "correo": correo,
+                    "contrasenia": contrasenia,
+                    "genero": genero
+                }
+                self.insertar_paciente(paciente)
+                st.success("✅ Paciente registrado correctamente")
+
+        # ----------------------------------
+        elif menu == "Ver Pacientes":
+            st.subheader("🧑‍⚕️ Pacientes")
+            st.dataframe(self.obtener_pacientes(), use_container_width=True)
+
+        elif menu == "Historial Clínico":
+            st.subheader("📘 Historial Clínico")
+            st.dataframe(self.obtener_historial(), use_container_width=True)
+
+        elif menu == "Tratamientos":
+            st.subheader("💊 Tratamientos")
+            st.dataframe(self.obtener_tratamientos(), use_container_width=True)

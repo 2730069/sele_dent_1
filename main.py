@@ -1,4 +1,8 @@
+import streamlit as st
 from capaPresentacion.pPersona import PPersonas
 
-if __name__ == "__main__":
-    PPersonas()
+def main():
+    app = PPersonas()
+    app.run()
+
+main()
