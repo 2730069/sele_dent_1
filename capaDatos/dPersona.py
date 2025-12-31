@@ -2,20 +2,59 @@ from conexion import supabase
 
 class DPersona:
 
-    # Insertar un paciente
-    def insertarPersona(self, persona: dict):
-        try:
-            response = supabase.table("Pacientes").insert(persona).execute()
-            return response.data
-        except Exception as e:
-            print("Error al insertar:", e)
-            return None
+    # =========================
+    # PACIENTES
+    # =========================
+    def insertarPersona(self, persona):
+        return supabase.table("pacientes").insert(persona).execute().data
 
-    # Obtener todos los pacientes
     def mostrarPersona(self):
-        try:
-            response = supabase.table("Pacientes").select("*").execute()
-            return response.data
-        except Exception as e:
-            print("Error al obtener datos:", e)
-            return []
+        return supabase.table("pacientes").select("*").execute().data
+
+    def eliminarPersona(self, id_paciente):
+        supabase.table("pacientes").delete().eq("id_paciente", id_paciente).execute()
+
+    def actualizarPaciente(self, id_paciente, datos):
+        supabase.table("pacientes") \
+            .update(datos) \
+            .eq("id_paciente", id_paciente) \
+            .execute()
+
+    # =========================
+    # HISTORIAL CLÍNICO
+    # =========================
+    def obtener_historial(self):
+        return supabase.table("historialclinico").select("*").execute().data
+
+    # =========================
+    # TRATAMIENTOS
+    # =========================
+    def obtener_tratamientos(self):
+        return supabase.table("tratamientos").select("*").execute().data
+
+    # =========================
+    # CITAS
+    # =========================
+    def obtenerCitas(self):
+        return supabase.table("citas").select("*").execute().data
+
+    def registrarCita(self, cita):
+        supabase.table("citas").insert(cita).execute()
+
+    def actualizarEstadoCita(self, id_cita, estado):
+        supabase.table("citas") \
+            .update({"estado": estado}) \
+            .eq("id_cita", id_cita) \
+            .execute()
+
+    # =========================
+    # FACTURAS
+    # =========================
+    def obtenerFacturas(self):
+        return supabase.table("facturas").select("*").execute().data
+
+    def actualizarEstadoPago(self, id_factura, estado_pago):
+        supabase.table("facturas") \
+            .update({"estado_pago": estado_pago}) \
+            .eq("id_factura", id_factura) \
+            .execute()
